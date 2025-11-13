@@ -11,7 +11,7 @@ const transporter = nodemailer.createTransport(
   sendgridTransport({
     auth: {
       api_key:
-        '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'
+        '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'
     }
   })
 );
@@ -217,11 +217,11 @@ exports.postReset = (req, res, next) => {
           `
         });
       })
-    .catch(err => {
-      const error = new Error(err);
-      error.httpStatusCode = 500;
-      return next(error);
-    });
+      .catch(err => {
+        const error = new Error(err);
+        error.httpStatusCode = 500;
+        return next(error);
+      });
   });
 };
 
