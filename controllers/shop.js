@@ -193,8 +193,6 @@ exports.getInvoice = (req, res, next) => {
 
       addPageHeader();
 
-      // ❌ "INVOICE" TITLE REMOVED HERE
-
       addTableHeader();
 
       let totalPrice = 0;
