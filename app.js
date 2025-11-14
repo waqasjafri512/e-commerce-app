@@ -13,21 +13,27 @@ const errorController = require('./controllers/error');
 const User = require('./models/user');
 
 const MONGODB_URI =
-  'mongodb+srv://waqas_db_user:waqas_12345@cluster1.qgutmsa.mongodb.net/shop?appName=Cluster1';
+  'mongodb+srv://waqas-db-user:DPnzCsu9Bd84yZ5Y@cluster1.qgutmsa.mongodb.net/shop?appName=Cluster1';
 
 const app = express();
+
 const store = new MongoDBStore({
   uri: MONGODB_URI,
   collection: 'sessions'
 });
+
 const csrfProtection = csrf();
 
+// -----------------------
+// Multer Storage Fix
+// -----------------------
 const fileStorage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, 'images');
   },
   filename: (req, file, cb) => {
-    cb(null, new Date().toISOString() + '-' + file.originalname);
+    const safeName = new Date().toISOString().replace(/:/g, '-') + '-' + file.originalname;
+    cb(null, safeName);
   }
 });
 
@@ -43,19 +49,26 @@ const fileFilter = (req, file, cb) => {
   }
 };
 
+// -----------------------
 app.set('view engine', 'ejs');
 app.set('views', 'views');
 
+// Routes
 const adminRoutes = require('./routes/admin');
 const shopRoutes = require('./routes/shop');
 const authRoutes = require('./routes/auth');
 
+// Body parser + multer
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(
   multer({ storage: fileStorage, fileFilter: fileFilter }).single('image')
 );
+
+// Static files
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/images', express.static(path.join(__dirname, 'images')));
+
+// Session
 app.use(
   session({
     secret: 'my secret',
@@ -64,17 +77,20 @@ app.use(
     store: store
   })
 );
+
+// CSRF + Flash
 app.use(csrfProtection);
 app.use(flash());
 
+// Global template variables
 app.use((req, res, next) => {
   res.locals.isAuthenticated = req.session.isLoggedIn;
   res.locals.csrfToken = req.csrfToken();
   next();
 });
 
+// User middleware
 app.use((req, res, next) => {
-  // throw new Error('Sync Dummy');
   if (!req.session.user) {
     return next();
   }
@@ -91,15 +107,20 @@ app.use((req, res, next) => {
     });
 });
 
+// Routes
 app.use('/admin', adminRoutes);
 app.use(shopRoutes);
 app.use(authRoutes);
 
+// 500 page route
 app.get('/500', errorController.get500);
 
+// 404 handler
 app.use(errorController.get404);
 
+// Final error handler
 app.use((error, req, res, next) => {
+  console.log(error);
   res.status(500).render('500', {
     pageTitle: 'Error!',
     path: '/500',
@@ -107,11 +128,12 @@ app.use((error, req, res, next) => {
   });
 });
 
-
+// MongoDB Connect + Start Server
 mongoose
   .connect(MONGODB_URI)
   .then(result => {
-    app.listen(4000);
+    app.listen(4000, () => {
+    });
   })
   .catch(err => {
     console.log(err);
