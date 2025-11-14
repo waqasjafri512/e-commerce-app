@@ -116,42 +116,158 @@ exports.getInvoice = (req, res, next) => {
         return next(new Error('Unauthorized'));
       }
 
-      const invoiceName = 'invoice-' + orderId + '.pdf';
+      const invoiceName = `invoice-${orderId}.pdf`;
       const invoicePath = path.join('data', 'invoices', invoiceName);
 
-      const pdfDoc = new PDFDocument();
+      const doc = new PDFDocument({ margin: 50, size: 'A4' });
 
-      // Headers must be set BEFORE piping
       res.setHeader('Content-Type', 'application/pdf');
       res.setHeader(
         'Content-Disposition',
         'inline; filename="' + invoiceName + '"'
       );
 
-      // Save PDF to server
-      pdfDoc.pipe(fs.createWriteStream(invoicePath));
+      doc.pipe(fs.createWriteStream(invoicePath));
+      doc.pipe(res);
 
-      // Send PDF to browser
-      pdfDoc.pipe(res);
+      const leftMargin = 50;
+      const rightMargin = 50;
+      const pageWidth = doc.page.width;
+      const usableWidth = pageWidth - leftMargin - rightMargin;
 
-      // PDF Content
-      pdfDoc.fontSize(26).text('Invoice', { underline: true });
-      pdfDoc.text('-----------------------');
+      const productX = leftMargin;
+      const qtyX = leftMargin + Math.round(usableWidth * 0.65);
+      const priceX = leftMargin + Math.round(usableWidth * 0.80);
+
+      const lineHeight = 18;
+      let currentY = 50;
+      const bottomMargin = 50;
+      const pageHeightLimit = doc.page.height - bottomMargin;
+
+      function addPageHeader() {
+        // --- SHOP INFO ---
+        doc.fontSize(20).font('Helvetica-Bold').text('MY SHOP', leftMargin, currentY);
+        doc.fontSize(10).font('Helvetica')
+          .text('Street 55, I10/1 Islamabad, Pakistan', leftMargin, currentY + 22)
+          .text('Phone: +92 300 0000000', leftMargin, currentY + 36)
+          .text('Email: support@myshop.com', leftMargin, currentY + 50);
+
+        currentY += 95;
+
+        // --- ORDER DETAILS HEADING ---
+        doc.fontSize(14).font('Helvetica-Bold').text('Order Details', leftMargin, currentY);
+
+        currentY += 20;
+
+        // --- INVOICE INFO ---
+        doc.fontSize(12).font('Helvetica')
+          .text(`Invoice Number: ${orderId}`, leftMargin, currentY)
+          .text(`Invoice Date: ${new Date().toLocaleDateString()}`, leftMargin, currentY + 15)
+          .text(`Customer Email: ${order.user.email}`, leftMargin, currentY + 30);
+
+        currentY += 60; // space before table
+      }
+
+      function addTableHeader() {
+        doc.fontSize(14).font('Helvetica-Bold');
+        doc.text('Product', productX, currentY);
+        doc.text('Qty', qtyX, currentY);
+        doc.text('Price', priceX, currentY);
+
+        doc.moveTo(productX, currentY + 16)
+          .lineTo(pageWidth - rightMargin, currentY + 16)
+          .stroke();
+
+        currentY += 24;
+        doc.font('Helvetica');
+      }
+
+      function checkForNewPage() {
+        if (currentY + lineHeight > pageHeightLimit) {
+          doc.addPage();
+          currentY = 50;
+          addPageHeader();
+          addTableHeader();
+        }
+      }
+
+      addPageHeader();
+
+      // ❌ "INVOICE" TITLE REMOVED HERE
+
+      addTableHeader();
 
       let totalPrice = 0;
+
       order.products.forEach(prod => {
-        totalPrice += prod.quantity * prod.product.price;
-        pdfDoc
-          .fontSize(14)
-          .text(
-            `${prod.product.title} - ${prod.quantity} x ${prod.product.price}`
-          );
+        const qty = Number(prod.quantity);
+        const price = Number(prod.product.price);
+        const lineTotal = qty * price;
+        totalPrice += lineTotal;
+
+        checkForNewPage();
+
+        const rowY = currentY;
+
+        const productColumnWidth = qtyX - productX - 10;
+        doc.fontSize(12);
+
+        const productTitle = String(prod.product.title);
+
+        doc.text(productTitle, productX, rowY, {
+          width: productColumnWidth,
+          align: 'left'
+        });
+
+        const productTextHeight = doc.heightOfString(productTitle, {
+          width: productColumnWidth
+        });
+
+        doc.text(String(qty), qtyX, rowY);
+        doc.text('Rs ' + price.toFixed(2), priceX, rowY);
+
+        currentY += Math.max(productTextHeight, lineHeight);
+
+        doc.moveTo(productX, currentY - 4)
+          .lineTo(pageWidth - rightMargin, currentY - 4)
+          .strokeColor('#eeeeee')
+          .lineWidth(0.5)
+          .stroke()
+          .strokeColor('black')
+          .lineWidth(1);
       });
 
-      pdfDoc.text('-----------------------');
-      pdfDoc.fontSize(16).text('Total Price : ' + totalPrice);
+      if (currentY + 60 > pageHeightLimit) {
+        doc.addPage();
+        currentY = 50;
+      }
 
-      pdfDoc.end(); // Finish PDF
+      // --- TOTAL AMOUNT ---
+      doc.fontSize(14).font('Helvetica-Bold');
+      doc.text('Total Amount:', productX, currentY + 10);
+
+      doc.text('Rs ' + totalPrice.toFixed(2), priceX, currentY + 10, {
+        width: 100,
+        align: 'left'
+      });
+
+      doc.font('Helvetica');
+
+      currentY += 70;
+
+      doc.fontSize(10).text(
+        'Thank you for shopping with us!',
+        leftMargin,
+        currentY,
+        { align: 'center', width: usableWidth }
+      );
+
+      doc.text(
+        'This is a computer-generated invoice and does not require signature.',
+        { align: 'center', width: usableWidth }
+      );
+
+      doc.end();
     })
     .catch(err => next(err));
 };
