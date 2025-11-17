@@ -201,7 +201,7 @@ exports.postDeleteProduct = (req, res, next) => {
         return next(new Error('Product not found.'));
       }
       fileHelper.deleteFile(product.imageUrl);
-      Product.deleteOne({ _id: prodId, userId: req.user._id });
+      return Product.deleteOne({ _id: prodId, userId: req.user._id });
     })
     .then(() => {
       console.log('DESTROYED PRODUCT');
