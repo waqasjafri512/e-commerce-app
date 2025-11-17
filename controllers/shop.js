@@ -3,6 +3,7 @@ const path = require('path');
 const PDFDocument = require('pdfkit');
 const Product = require('../models/product');
 const Order = require('../models/order');
+const ITEMS_PER_PAGE = 2;
 
 exports.getProducts = (req, res, next) => {
   Product.find()
@@ -13,7 +14,11 @@ exports.getProducts = (req, res, next) => {
         path: '/products'
       });
     })
-    .catch(err => next(new Error(err)));
+    .catch(err => {
+      const error = new Error(err);
+      error.httpStatusCode = 500;
+      return next(error);
+    });
 };
 
 exports.getProduct = (req, res, next) => {
@@ -26,11 +31,18 @@ exports.getProduct = (req, res, next) => {
         path: '/products'
       });
     })
-    .catch(err => next(new Error(err)));
+    .catch(err => {
+      const error = new Error(err);
+      error.httpStatusCode = 500;
+      return next(error);
+    });
 };
 
 exports.getIndex = (req, res, next) => {
+  const page = +req.query.page;
   Product.find()
+    .skip((page - 1) * ITEMS_PER_PAGE)
+    .limit(ITEMS_PER_PAGE)
     .then(products => {
       res.render('shop/index', {
         prods: products,
@@ -38,7 +50,11 @@ exports.getIndex = (req, res, next) => {
         path: '/'
       });
     })
-    .catch(err => next(new Error(err)));
+    .catch(err => {
+      const error = new Error(err);
+      error.httpStatusCode = 500;
+      return next(error);
+    });
 };
 
 exports.getCart = (req, res, next) => {
@@ -51,7 +67,11 @@ exports.getCart = (req, res, next) => {
         products: user.cart.items
       });
     })
-    .catch(err => next(new Error(err)));
+    .catch(err => {
+      const error = new Error(err);
+      error.httpStatusCode = 500;
+      return next(error);
+    });
 };
 
 exports.postCart = (req, res, next) => {
@@ -59,7 +79,11 @@ exports.postCart = (req, res, next) => {
   Product.findById(prodId)
     .then(product => req.user.addToCart(product))
     .then(() => res.redirect('/cart'))
-    .catch(err => next(new Error(err)));
+    .catch(err => {
+      const error = new Error(err);
+      error.httpStatusCode = 500;
+      return next(error);
+    });
 };
 
 exports.postCartDeleteProduct = (req, res, next) => {
@@ -67,7 +91,11 @@ exports.postCartDeleteProduct = (req, res, next) => {
   req.user
     .removeFromCart(prodId)
     .then(() => res.redirect('/cart'))
-    .catch(err => next(new Error(err)));
+    .catch(err => {
+      const error = new Error(err);
+      error.httpStatusCode = 500;
+      return next(error);
+    });
 };
 
 exports.postOrder = (req, res, next) => {
@@ -91,7 +119,11 @@ exports.postOrder = (req, res, next) => {
     })
     .then(() => req.user.clearCart())
     .then(() => res.redirect('/orders'))
-    .catch(err => next(new Error(err)));
+    .catch(err => {
+      const error = new Error(err);
+      error.httpStatusCode = 500;
+      return next(error);
+    });
 };
 
 exports.getOrders = (req, res, next) => {
@@ -103,7 +135,11 @@ exports.getOrders = (req, res, next) => {
         orders: orders
       });
     })
-    .catch(err => next(new Error(err)));
+    .catch(err => {
+      const error = new Error(err);
+      error.httpStatusCode = 500;
+      return next(error);
+    });
 };
 
 exports.getInvoice = (req, res, next) => {
@@ -267,5 +303,9 @@ exports.getInvoice = (req, res, next) => {
 
       doc.end();
     })
-    .catch(err => next(err));
+      .catch(err => {
+      const error = new Error(err);
+      error.httpStatusCode = 500;
+      return next(error);
+    });
 };
