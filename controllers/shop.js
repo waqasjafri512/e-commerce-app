@@ -261,7 +261,8 @@ exports.getInvoice = (req, res, next) => {
       order.products.forEach(prod => {
         const qty = Number(prod.quantity);
         const price = Number(prod.product.price);
-        const lineTotal = qty * price;
+        const lineTotal = qty * price;  // <-- FIX
+
         totalPrice += lineTotal;
 
         checkForNewPage();
@@ -283,7 +284,9 @@ exports.getInvoice = (req, res, next) => {
         });
 
         doc.text(String(qty), qtyX, rowY);
-        doc.text('Rs ' + price.toFixed(2), priceX, rowY);
+
+        // FIXED PRICE COLUMN
+        doc.text('Rs ' + lineTotal.toFixed(2), priceX, rowY);
 
         currentY += Math.max(productTextHeight, lineHeight);
 
@@ -295,6 +298,7 @@ exports.getInvoice = (req, res, next) => {
           .strokeColor('black')
           .lineWidth(1);
       });
+
 
       if (currentY + 60 > pageHeightLimit) {
         doc.addPage();
