@@ -11,7 +11,7 @@ const transporter = nodemailer.createTransport(
   sendgridTransport({
     auth: {
       api_key:
-        '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'
+        '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'
     }
   })
 );
@@ -213,15 +213,11 @@ exports.postReset = (req, res, next) => {
           subject: 'Password reset',
           html: `
             <p>You requested a password reset</p>
-            <p>Click this <a href="http://localhost:3000/reset/${token}">link</a> to set a new password.</p>
+            <p>Click this <a href="http://localhost:4000/reset/${token}">link</a> to set a new password.</p>
           `
         });
       })
-      .catch(err => {
-        const error = new Error(err);
-        error.httpStatusCode = 500;
-        return next(error);
-      });
+      .catch(err => console.log(err));
   });
 };
 
@@ -262,10 +258,17 @@ exports.postNewPassword = (req, res, next) => {
     _id: userId
   })
     .then(user => {
+      if (!user) {
+        console.log("Token expired or user not found");
+        return res.redirect('/reset');
+      }
+
       resetUser = user;
       return bcrypt.hash(newPassword, 12);
     })
     .then(hashedPassword => {
+      if (!resetUser) return;
+
       resetUser.password = hashedPassword;
       resetUser.resetToken = undefined;
       resetUser.resetTokenExpiration = undefined;
@@ -274,9 +277,6 @@ exports.postNewPassword = (req, res, next) => {
     .then(result => {
       res.redirect('/login');
     })
-    .catch(err => {
-      const error = new Error(err);
-      error.httpStatusCode = 500;
-      return next(error);
-    });
+    .catch(err => console.log(err));
 };
+

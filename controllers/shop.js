@@ -216,7 +216,7 @@ exports.getInvoice = (req, res, next) => {
         currentY += 95;
 
         // --- ORDER DETAILS HEADING ---
-        doc.fontSize(14).font('Helvetica-Bold').text('Order Details', leftMargin, currentY);
+        doc.fontSize(18).font('Helvetica-Bold').text('Order Details', leftMargin, currentY);
 
         currentY += 20;
 
