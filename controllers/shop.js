@@ -123,6 +123,26 @@ exports.postCartDeleteProduct = (req, res, next) => {
     });
 };
 
+exports.getCheckout = async (req, res, next) => {
+  try {
+    await req.user.populate('cart.items.productId');
+    const products = req.user.cart.items;
+    const total = products.reduce((sum, item) => {
+      return sum + item.quantity * item.productId.price;
+    }, 0);
+    res.render('shop/checkout', {
+      path: '/checkout',
+      pageTitle: 'Checkout',
+      products: products,
+      totalSum: total
+    });
+  } catch (err) {
+    const error = new Error(err);
+    error.httpStatusCode = 500;
+    return next(error);
+  }
+};
+
 exports.postOrder = (req, res, next) => {
   req.user
     .populate('cart.items.productId')
