@@ -1,8 +1,10 @@
 const fs = require('fs');
 const path = require('path');
+const stripe = require('stripe')('sk_test_51OvO6zLAWPFfX0fdu8u8EKXIME2F7YqygkxV7WiDBqTBZItHKQXEbnM3sYzRhby82FKzxp8q4UfiCYvV5cvA1QFc00FtaoaPka');
 const PDFDocument = require('pdfkit');
 const Product = require('../models/product');
-const Order = require('../models/order');
+const Order = require('../models/order'); // match your model file name exactly
+const { deserialize } = require('v8');
 const ITEMS_PER_PAGE = 2;
 
 exports.getProducts = (req, res, next) => {
@@ -122,25 +124,91 @@ exports.postCartDeleteProduct = (req, res, next) => {
       return next(error);
     });
 };
-
+// waqas
 exports.getCheckout = async (req, res, next) => {
   try {
+    // Populate the cart products
     await req.user.populate('cart.items.productId');
+
     const products = req.user.cart.items;
+
+    // Calculate total
     const total = products.reduce((sum, item) => {
+      if (!item.productId) return sum; // skip deleted products
       return sum + item.quantity * item.productId.price;
     }, 0);
+
+    // Create Stripe line items
+    const lineItems = products
+      .filter(item => item.productId) // remove deleted products
+      .map(item => {
+        return {
+          price_data: {
+            currency: 'usd',
+            product_data: {
+              name: item.productId.title,
+              description: item.productId.description,
+              images: [
+                req.protocol + '://' + req.get('host') + '/' + item.productId.imageUrl.replace(/\\/g, '/')
+              ]
+            },
+            unit_amount: item.productId.price * 100 // price in cents
+          },
+          quantity: item.quantity
+        };
+      });
+
+    // Create Stripe Checkout session
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ['card'],
+      line_items: lineItems,
+      mode: 'payment',
+      success_url: req.protocol + '://' + req.get('host') + '/checkout/success',
+      cancel_url: req.protocol + '://' + req.get('host') + '/checkout/cancel'
+    });
+
+    // Render checkout page
     res.render('shop/checkout', {
       path: '/checkout',
       pageTitle: 'Checkout',
       products: products,
-      totalSum: total
+      totalSum: total,
+      sessionId: session.id
     });
   } catch (err) {
+    console.error(err);
     const error = new Error(err);
     error.httpStatusCode = 500;
     return next(error);
   }
+};
+
+exports.getCheckoutSuccess = (req, res, next) => {
+  req.user
+    .populate('cart.items.productId')
+    .then(user => {
+      const products = user.cart.items.map(i => ({
+        quantity: i.quantity,
+        product: { ...i.productId._doc }
+      }));
+
+      const order = new Order({
+        user: {
+          email: req.user.email,
+          userId: req.user
+        },
+        products: products
+      });
+
+      return order.save();
+    })
+    .then(() => req.user.clearCart())
+    .then(() => res.redirect('/orders'))
+    .catch(err => {
+      const error = new Error(err);
+      error.httpStatusCode = 500;
+      return next(error);
+    });
 };
 
 exports.postOrder = (req, res, next) => {
