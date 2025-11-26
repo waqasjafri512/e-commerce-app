@@ -40,5 +40,15 @@
     "pug": "^3.0.3",
     "sequelize": "^6.37.7",
     "stripe": "^19.3.1"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/waqasjafri512/e-commerce-app.git"
+  },
+  "keywords": [],
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/waqasjafri512/e-commerce-app/issues"
+  },
+  "homepage": "https://github.com/waqasjafri512/e-commerce-app#readme"
 }
