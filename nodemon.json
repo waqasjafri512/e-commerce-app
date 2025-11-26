@@ -1,0 +1,8 @@
+{
+    "env": {
+        "MONGO_USER": "waqas-db-user",
+        "MONGO_PASSWORD": "DPnzCsu9Bd84yZ5Y",
+        "MONGO_DEFAULT_DATABASE": "shop",
+        "STRIPE_KEY": "sk_test_51OvO6zLAWPFfX0fdu8u8EKXIME2F7YqygkxV7WiDBqTBZItHKQXEbnM3sYzRhby82FKzxp8q4UfiCYvV5cvA1QFc00FtaoaPka"
+    }
+}

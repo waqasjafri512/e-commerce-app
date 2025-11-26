@@ -1,22 +1,25 @@
 {
-  "name": "nodejs-complete-guide",
+  "name": "nodejs-shop-project",
   "version": "1.0.0",
-  "description": "Complete Node.js Guide",
+  "description": "Complete Node.js Guide by Waqas",
   "main": "app.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "nodemon app.js",
-    "start-server": "node app.js"
+    "start": "cross-env NODE_ENV=production MONGO_USER=waqas-db-user MONGO_PASSWORD=DPnzCsu9Bd84yZ5Y MONGO_DEFAULT_DATABASE=shop STRIPE_KEY=sk_test_51OvO6zLAWPFfX0fdu8u8EKXIME2F7YqygkxV7WiDBqTBZItHKQXEbnM3sYzRhby82FKzxp8q4UfiCYvV5cvA1QFc00FtaoaPka node app.js",
+    "start-server": "node app.js",
+    "start:dev": "nodemon app.js"
   },
-  "author": "Maximilian Schwarzmüller",
+  "author": "Waqas",
   "license": "ISC",
   "devDependencies": {
+    "cross-env": "^10.1.0",
     "nodemon": "^3.1.10"
   },
   "dependencies": {
     "@sendgrid/mail": "^8.1.6",
     "bcryptjs": "^3.0.3",
     "body-parser": "^1.18.3",
+    "compression": "^1.8.1",
     "connect-flash": "^0.1.1",
     "connect-mongodb-session": "^5.0.0",
     "csurf": "^1.2.2",
@@ -25,8 +28,10 @@
     "express-handlebars": "^8.0.3",
     "express-session": "^1.18.2",
     "express-validator": "^7.3.0",
+    "helmet": "^8.1.0",
     "mongodb": "^3.1.6",
     "mongoose": "^8.19.2",
+    "morgan": "^1.10.1",
     "multer": "^2.0.2",
     "mysql2": "^3.15.3",
     "nodemailer": "^7.0.10",

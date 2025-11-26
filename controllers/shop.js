@@ -1,6 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const stripe = require('stripe')('sk_test_51OvO6zLAWPFfX0fdu8u8EKXIME2F7YqygkxV7WiDBqTBZItHKQXEbnM3sYzRhby82FKzxp8q4UfiCYvV5cvA1QFc00FtaoaPka');
+const stripe = require('stripe')(process.env.STRIPE_KEY);
 const PDFDocument = require('pdfkit');
 const Product = require('../models/product');
 const Order = require('../models/order'); // match your model file name exactly

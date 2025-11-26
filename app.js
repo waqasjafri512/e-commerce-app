@@ -1,5 +1,5 @@
 const path = require('path');
-
+const fs = require('fs');
 const express = require('express');
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
@@ -8,12 +8,14 @@ const MongoDBStore = require('connect-mongodb-session')(session);
 const csrf = require('csurf');
 const flash = require('connect-flash');
 const multer = require('multer');
+const helmet = require('helmet');
+const compression = require('compression');
+const morgan = require('morgan');
 
 const errorController = require('./controllers/error');
 const User = require('./models/user');
-
 const MONGODB_URI =
-  'mongodb+srv://waqas-db-user:DPnzCsu9Bd84yZ5Y@cluster1.qgutmsa.mongodb.net/shop?appName=Cluster1';
+  `mongodb+srv://${process.env.MONGO_USER}:${process.env.MONGO_PASSWORD}@cluster1.qgutmsa.mongodb.net/${process.env.MONGO_DEFAULT_DATABASE}?appName=Cluster1`;
 
 const app = express();
 
@@ -58,6 +60,17 @@ const adminRoutes = require('./routes/admin');
 const shopRoutes = require('./routes/shop');
 const authRoutes = require('./routes/auth');
 
+const accessLogStream = require('fs').createWriteStream(
+  path.join(__dirname, 'access.log'),
+  { flags: 'a' }
+); 
+
+// Helmet for security
+app.use(helmet());
+// Compression for performance
+app.use(compression());
+// Morgan for logging
+app.use(morgan('combined', { stream: accessLogStream }));
 // Body parser + multer
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(
@@ -132,8 +145,7 @@ app.use((error, req, res, next) => {
 mongoose
   .connect(MONGODB_URI)
   .then(result => {
-    app.listen(4000, () => {
-    });
+    app.listen(process.env.PORT || 3000);
   })
   .catch(err => {
     console.log(err);
