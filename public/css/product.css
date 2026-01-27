@@ -1,21 +1,84 @@
-/* Product specific styles that aren't covered by main.css */
-.product-item {
-    /* Additional custom styling if needed beyond .card */
+/* Product Detail Page Styling */
+
+.product-detail-card {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid white;
+    border-radius: 24px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    max-width: 900px;
+    margin: 2rem auto;
+    animation: fadeInUp 0.8s ease-out;
 }
 
-.product__title {
-    /* Handled by card styles but can be specific here */
-    font-size: 1.2rem;
-    margin-bottom: 0.5rem;
+@media (min-width: 768px) {
+    .product-detail-card {
+        flex-direction: row;
+        align-items: center;
+        /* Vertically center content */
+    }
 }
 
-.product__price {
-    font-size: 1.5rem;
+.product-detail__image {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem;
+    background: rgba(255, 255, 255, 0.4);
+}
+
+.product-detail__image img {
+    max-width: 100%;
+    max-height: 400px;
+    object-fit: contain;
+    filter: drop-shadow(0 15px 30px rgba(0, 0, 0, 0.15));
+    transition: transform 0.5s ease;
+}
+
+.product-detail__image img:hover {
+    transform: scale(1.05) rotate(2deg);
+}
+
+.product-detail__content {
+    flex: 1;
+    padding: 3rem;
+    text-align: left;
+}
+
+.product-detail__title {
+    font-size: 2.5rem;
+    font-weight: 800;
     color: var(--text-main);
-    margin-bottom: 0.5rem;
-    font-weight: 600;
+    margin: 0 0 0.5rem 0;
+    line-height: 1.2;
 }
 
-.product__description {
-    /* Handled by card styles */
+.product-detail__price {
+    font-size: 2rem;
+    color: var(--primary-color);
+    font-weight: 700;
+    margin: 0 0 1.5rem 0;
+}
+
+.product-detail__description {
+    font-size: 1.1rem;
+    line-height: 1.7;
+    color: var(--text-muted);
+    margin-bottom: 2.5rem;
+}
+
+.product-detail__actions {
+    display: flex;
+    gap: 1rem;
+}
+
+/* Override add-to-cart button style for detail page if needed */
+.product-detail__actions button {
+    padding: 1rem 2.5rem;
+    font-size: 1.1rem;
 }

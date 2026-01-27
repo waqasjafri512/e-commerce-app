@@ -69,7 +69,17 @@ const accessLogStream = require('fs').createWriteStream(
 );
 
 // Helmet for security
-app.use(helmet());
+app.use(
+  helmet.contentSecurityPolicy({
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "https://js.stripe.com"],
+      frameSrc: ["'self'", "https://js.stripe.com", "https://hooks.stripe.com"],
+      connectSrc: ["'self'", "https://api.stripe.com"],
+      imgSrc: ["'self'", "data:", "https://*.stripe.com"]
+    }
+  })
+);
 // Compression for performance
 app.use(compression());
 // Morgan for logging
@@ -151,7 +161,9 @@ mongoose
     // https
     // .createServer({key: privateKey, cert: certificate}, app)
     // .listen(process.env.PORT || 3000);
-    app.listen(process.env.PORT || 3000);
+    app.listen(process.env.PORT || 3000, () => {
+      console.log('Server is running on port 3000');
+    });
   })
   .catch(err => {
     console.log(err);

@@ -1,8 +1,0 @@
-[dotenv@17.2.3] injecting env (5) from .env -- tip: ≡ƒ¢á∩╕Å  run anywhere with `dotenvx run -- yourcommand`
---- DB Config Debug ---
-MONGO_USER: waqas-anjum
-MONGO_DEFAULT_DATABASE: shop
-STRIPE_KEY (exists): true
-PORT: 3000
-URI assembled (password masked): mongodb+srv://waqas-anjum:****@cluster1.qgutmsa.mongodb.net/shop?appName=Cluster1
---- End Debug ---

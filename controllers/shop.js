@@ -5,18 +5,18 @@ const PDFDocument = require('pdfkit');
 const Product = require('../models/product');
 const Order = require('../models/order'); // match your model file name exactly
 const { deserialize } = require('v8');
-const ITEMS_PER_PAGE = 2;
+const ITEMS_PER_PAGE = 8;
 
 exports.getProducts = (req, res, next) => {
- const page = +req.query.page || 1;
+  const page = +req.query.page || 1;
   let totalItems;
   Product.find().countDocuments()
-  .then(numProducts => {
-    totalItems = numProducts;
-    return Product.find().skip((page - 1) * ITEMS_PER_PAGE)
-    .limit(ITEMS_PER_PAGE);
-  })
-  .then(products => {
+    .then(numProducts => {
+      totalItems = numProducts;
+      return Product.find().skip((page - 1) * ITEMS_PER_PAGE)
+        .limit(ITEMS_PER_PAGE);
+    })
+    .then(products => {
       res.render('shop/product-list', {
         prods: products,
         pageTitle: 'Products',
@@ -29,7 +29,7 @@ exports.getProducts = (req, res, next) => {
         currentPage: page,
         lastPage: Math.ceil(totalItems / ITEMS_PER_PAGE)
       });
-   })
+    })
     .catch(err => {
       const error = new Error(err);
       error.httpStatusCode = 500;
@@ -58,12 +58,12 @@ exports.getIndex = (req, res, next) => {
   const page = +req.query.page || 1;
   let totalItems;
   Product.find().countDocuments()
-  .then(numProducts => {
-    totalItems = numProducts;
-    return Product.find().skip((page - 1) * ITEMS_PER_PAGE)
-    .limit(ITEMS_PER_PAGE);
-  })
-  .then(products => {
+    .then(numProducts => {
+      totalItems = numProducts;
+      return Product.find().skip((page - 1) * ITEMS_PER_PAGE)
+        .limit(ITEMS_PER_PAGE);
+    })
+    .then(products => {
       res.render('shop/index', {
         prods: products,
         pageTitle: 'Shop',
@@ -76,7 +76,7 @@ exports.getIndex = (req, res, next) => {
         currentPage: page,
         lastPage: Math.ceil(totalItems / ITEMS_PER_PAGE)
       });
-   })
+    })
     .catch(err => {
       const error = new Error(err);
       error.httpStatusCode = 500;
@@ -163,8 +163,8 @@ exports.getCheckout = async (req, res, next) => {
       payment_method_types: ['card'],
       line_items: lineItems,
       mode: 'payment',
-      success_url: req.protocol + '://' + req.get('host') + '/checkout/success',
-      cancel_url: req.protocol + '://' + req.get('host') + '/checkout/cancel'
+      ui_mode: 'embedded',
+      return_url: req.protocol + '://' + req.get('host') + '/checkout/success?session_id={CHECKOUT_SESSION_ID}'
     });
 
     // Render checkout page
@@ -173,7 +173,8 @@ exports.getCheckout = async (req, res, next) => {
       pageTitle: 'Checkout',
       products: products,
       totalSum: total,
-      sessionId: session.id
+      clientSecret: session.client_secret,
+      publishableKey: process.env.STRIPE_PUBLISHABLE_KEY || process.env.STRIPE_PUB_KEY || ''
     });
   } catch (err) {
     console.error(err);
@@ -239,6 +240,68 @@ exports.postOrder = (req, res, next) => {
     });
 };
 
+exports.getOrderCheckout = async (req, res, next) => {
+  const orderId = req.params.orderId;
+  try {
+    const order = await Order.findById(orderId);
+    if (!order) return next(new Error('No order found.'));
+    if (order.user.userId.toString() !== req.user._id.toString()) {
+      return next(new Error('Unauthorized'));
+    }
+
+    // Map order products to the same shape used by the checkout view
+    const products = order.products.map(i => ({
+      quantity: i.quantity,
+      productId: {
+        title: i.product.title,
+        description: i.product.description || '',
+        imageUrl: i.product.imageUrl || '',
+        price: i.product.price
+      }
+    }));
+
+    const total = order.products.reduce((sum, p) => {
+      return sum + Number(p.quantity) * Number(p.product.price);
+    }, 0);
+
+    const lineItems = order.products.map(i => ({
+      price_data: {
+        currency: 'usd',
+        product_data: {
+          name: i.product.title,
+          description: i.product.description,
+          images: [
+            req.protocol + '://' + req.get('host') + '/' + String(i.product.imageUrl).replace(/\\/g, '/')
+          ]
+        },
+        unit_amount: Math.round(Number(i.product.price) * 100)
+      },
+      quantity: i.quantity
+    }));
+
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ['card'],
+      line_items: lineItems,
+      mode: 'payment',
+      ui_mode: 'embedded',
+      return_url: req.protocol + '://' + req.get('host') + '/orders',
+    });
+
+    res.render('shop/checkout', {
+      path: '/checkout',
+      pageTitle: 'Checkout',
+      products: products,
+      totalSum: total,
+      clientSecret: session.client_secret,
+      publishableKey: process.env.STRIPE_PUBLISHABLE_KEY || process.env.STRIPE_PUB_KEY || ''
+    });
+  } catch (err) {
+    const error = new Error(err);
+    error.httpStatusCode = 500;
+    return next(error);
+  }
+};
+
 exports.getOrders = (req, res, next) => {
   Order.find({ 'user.userId': req.user._id })
     .then(orders => {
@@ -267,6 +330,16 @@ exports.getInvoice = (req, res, next) => {
 
       const invoiceName = `invoice-${orderId}.pdf`;
       const invoicePath = path.join('data', 'invoices', invoiceName);
+
+      // Ensure invoices directory exists (in case it was deleted)
+      const invoicesDir = path.join('data', 'invoices');
+      try {
+        if (!fs.existsSync(invoicesDir)) {
+          fs.mkdirSync(invoicesDir, { recursive: true });
+        }
+      } catch (err) {
+        return next(new Error('Could not create invoices directory.'));
+      }
 
       const doc = new PDFDocument({ margin: 50, size: 'A4' });
 
@@ -420,7 +493,7 @@ exports.getInvoice = (req, res, next) => {
 
       doc.end();
     })
-      .catch(err => {
+    .catch(err => {
       const error = new Error(err);
       error.httpStatusCode = 500;
       return next(error);

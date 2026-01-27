@@ -25,7 +25,16 @@ router.get('/checkout/success', shopController.getCheckoutSuccess);
 
 router.get('/checkout/cancel', shopController.getCheckout);
 
-// router.post('/create-order', isAuth, shopController.postOrder);
+router.post('/create-order', isAuth, shopController.postOrder);
+
+// If a GET to /create-order happens (old links or accidental navigation),
+// redirect to orders page so user ends up at the expected place.
+router.get('/create-order', isAuth, (req, res, next) => {
+	return res.redirect('/orders');
+});
+
+// Checkout for an existing order (from Orders page)
+router.get('/orders/:orderId/checkout', isAuth, shopController.getOrderCheckout);
 
 router.get('/orders', isAuth, shopController.getOrders);
 

@@ -15,10 +15,14 @@
                         <!-- ORDER HEADING + INVOICE LINK -->
                         <h1>
                             Order - # <%= order._id %>
-                            <a href="/orders/<%= order._id %>" 
-                               style="font-size: 16px; margin-left: 15px; color: purple;">
-                               Invoice
-                            </a>
+                                     <a href="/orders/<%= order._id %>" 
+                                         style="font-size: 16px; margin-left: 15px; color: purple;">
+                                         Invoice
+                                     </a>
+                                     <a href="/orders/<%= order._id %>/checkout" 
+                                         style="font-size: 16px; margin-left: 15px; color: green;">
+                                         Pay
+                                     </a>
                         </h1>
 
                         <!-- PRODUCT LIST -->

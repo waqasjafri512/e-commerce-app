@@ -40,7 +40,7 @@ body {
     margin: 0;
     font-family: 'Outfit', sans-serif;
     /* Soft Iridescent Background */
-    background: linear-gradient(-45deg, #eef2ff, #fdf4ff, #fff1f2, #f0fdfa);
+    background: linear-gradient(-45deg, #fdfbfb, #ebedee, #fdfbfb, #e6e9f0);
     background-size: 400% 400%;
     animation: gradientBG 20s ease infinite;
     color: var(--text-main);
@@ -237,9 +237,11 @@ main {
 /* Grid & Cards */
 .grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 2.5rem;
+    /* 4 columns: minmax(240px, 1fr) ensures 4 items on ~1200px width */
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 2rem;
     padding: 1rem 0;
+    justify-content: center;
 }
 
 .card {
