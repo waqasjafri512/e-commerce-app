@@ -1,4 +1,5 @@
 const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '.env') });
 const fs = require('fs');
 const https = require('https');
 const express = require('express');
@@ -15,8 +16,7 @@ const morgan = require('morgan');
 
 const errorController = require('./controllers/error');
 const User = require('./models/user');
-const MONGODB_URI =
-  `mongodb+srv://${process.env.MONGO_USER}:${process.env.MONGO_PASSWORD}@cluster1.qgutmsa.mongodb.net/${process.env.MONGO_DEFAULT_DATABASE}?appName=Cluster1`;
+const MONGODB_URI = process.env.MONGODB_URI;
 
 const app = express();
 
@@ -66,7 +66,7 @@ const authRoutes = require('./routes/auth');
 const accessLogStream = require('fs').createWriteStream(
   path.join(__dirname, 'access.log'),
   { flags: 'a' }
-); 
+);
 
 // Helmet for security
 app.use(helmet());
@@ -151,7 +151,7 @@ mongoose
     // https
     // .createServer({key: privateKey, cert: certificate}, app)
     // .listen(process.env.PORT || 3000);
-       app.listen(process.env.PORT || 3000);
+    app.listen(process.env.PORT || 3000);
   })
   .catch(err => {
     console.log(err);

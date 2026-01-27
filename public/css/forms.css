@@ -2,27 +2,37 @@
   margin: 1rem 0;
 }
 
-.form-control label,
+.form-control label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  color: var(--text-main);
+}
+
 .form-control input,
 .form-control textarea {
   display: block;
   width: 100%;
-  margin-bottom: 0.25rem;
-}
-
-.form-control input,
-.form-control textarea {
-  border: 1px solid #a1a1a1;
+  border: 1px solid #d1d5db;
+  /* Gray 300 */
+  padding: 0.75rem;
+  border-radius: var(--radius-md);
   font: inherit;
-  border-radius: 2px;
+  transition: all var(--transition-fast);
+  background: #f9fafb;
+  /* Gray 50 */
 }
 
 .form-control input:focus,
 .form-control textarea:focus {
-  outline-color: #00695c;
+  outline: none;
+  background: white;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2);
 }
 
 .form-control input.invalid,
 .form-control textarea.invalid {
-  border-color: red;
+  border-color: #ef4444;
+  background: #fef2f2;
 }
