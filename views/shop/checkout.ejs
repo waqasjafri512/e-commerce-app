@@ -18,8 +18,16 @@
                         <% }) %>
                 </ul>
                 <div class="centered">
-                    <h2>Total: <%= totalSum %>
+                    <h2>Total: <%= currency || 'USD' %> <%= totalSum %>
                     </h2>
+                </div>
+                <div class="centered">
+                    <form action="/checkout/coupon" method="POST">
+                        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                        <input type="text" name="code" placeholder="Promo code">
+                        <button class="btn" type="submit">Apply</button>
+                    </form>
+                    <% if (appliedCoupon) { %><p>Applied: <%= appliedCoupon.code %> (<%= appliedCoupon.discountPercent %>% off)</p><% } %>
                 </div>
                 <div id="checkout">
                     <!-- Stripe Embedded Checkout will mount here -->

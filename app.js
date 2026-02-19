@@ -13,6 +13,7 @@ const multer = require('multer');
 const helmet = require('helmet');
 const compression = require('compression');
 const morgan = require('morgan');
+const rateLimit = require('./middleware/rate-limit');
 
 const errorController = require('./controllers/error');
 const User = require('./models/user');
@@ -105,6 +106,7 @@ app.use(
 );
 
 // CSRF + Flash
+app.use(rateLimit({ windowMs: 60 * 1000, max: 250, message: 'Rate limit exceeded. Please try again shortly.' }));
 app.use(csrfProtection);
 app.use(flash());
 
@@ -112,6 +114,7 @@ app.use(flash());
 app.use((req, res, next) => {
   res.locals.isAuthenticated = req.session.isLoggedIn;
   res.locals.csrfToken = req.csrfToken();
+  res.locals.errorMessage = req.flash('error')[0] || null;
   next();
 });
 
@@ -126,6 +129,7 @@ app.use((req, res, next) => {
         return next();
       }
       req.user = user;
+      res.locals.wishlistCount = (user.wishlist || []).length;
       next();
     })
     .catch(err => {

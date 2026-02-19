@@ -24,6 +24,16 @@ const userSchema = new Schema({
         quantity: { type: Number, required: true }
       }
     ]
+  },
+  wishlist: [
+    {
+      type: Schema.Types.ObjectId,
+      ref: 'Product'
+    }
+  ],
+  preferredCurrency: {
+    type: String,
+    default: 'USD'
   }
 });
 
@@ -60,6 +70,22 @@ userSchema.methods.removeFromCart = function(productId) {
 
 userSchema.methods.clearCart = function() {
   this.cart = { items: [] };
+  return this.save();
+};
+
+userSchema.methods.toggleWishlist = function(productId) {
+  const exists = this.wishlist.some(
+    item => item.toString() === productId.toString()
+  );
+
+  if (exists) {
+    this.wishlist = this.wishlist.filter(
+      item => item.toString() !== productId.toString()
+    );
+  } else {
+    this.wishlist.push(productId);
+  }
+
   return this.save();
 };
 

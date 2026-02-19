@@ -5,6 +5,8 @@ const nodemailer = require('nodemailer');
 const sendgridTransport = require('nodemailer-sendgrid-transport');
 const { validationResult } = require('express-validator');
 
+const loginAttempts = new Map();
+
 const User = require('../models/user');
 
 const transporter = nodemailer.createTransport(
@@ -73,6 +75,18 @@ exports.postLogin = (req, res, next) => {
     });
   }
 
+  const attemptKey = `${req.ip}:${email}`;
+  const attempts = loginAttempts.get(attemptKey) || { count: 0, lockedUntil: 0 };
+  if (Date.now() < attempts.lockedUntil) {
+    return res.status(429).render('auth/login', {
+      path: '/login',
+      pageTitle: 'Login',
+      errorMessage: 'Too many failed attempts. Try again in 15 minutes.',
+      oldInput: { email: email, password: password },
+      validationErrors: []
+    });
+  }
+
   User.findOne({ email: email })
     .then(user => {
       if (!user) {
@@ -91,6 +105,7 @@ exports.postLogin = (req, res, next) => {
         .compare(password, user.password)
         .then(doMatch => {
           if (doMatch) {
+            loginAttempts.delete(attemptKey);
             req.session.isLoggedIn = true;
             req.session.user = user;
             return req.session.save(err => {
@@ -98,6 +113,12 @@ exports.postLogin = (req, res, next) => {
               res.redirect('/');
             });
           }
+          attempts.count += 1;
+          if (attempts.count >= 5) {
+            attempts.lockedUntil = Date.now() + 15 * 60 * 1000;
+            attempts.count = 0;
+          }
+          loginAttempts.set(attemptKey, attempts);
           return res.status(422).render('auth/login', {
             path: '/login',
             pageTitle: 'Login',

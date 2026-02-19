@@ -1,0 +1,21 @@
+<%- include('../includes/head.ejs') %>
+</head>
+<body>
+<%- include('../includes/navigation.ejs') %>
+<main>
+  <h1>Order Management</h1>
+  <% orders.forEach(order => { %>
+    <form action="/admin/orders/status" method="POST" style="margin-bottom:12px;">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+      <input type="hidden" name="orderId" value="<%= order._id %>">
+      <strong><%= order.user.email %></strong> - $<%= (order.totalAmount || 0).toFixed(2) %>
+      <select name="status">
+        <% ['Pending','Shipped','Delivered','Cancelled'].forEach(s => { %>
+          <option value="<%= s %>" <%= order.status === s ? 'selected' : '' %>><%= s %></option>
+        <% }) %>
+      </select>
+      <button class="btn" type="submit">Update</button>
+    </form>
+  <% }) %>
+</main>
+<%- include('../includes/end.ejs') %>
