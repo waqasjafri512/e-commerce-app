@@ -1,0 +1,17 @@
+<%- include('../includes/head.ejs') %>
+</head>
+<body>
+<%- include('../includes/navigation.ejs') %>
+<main>
+  <h1>Admin Dashboard</h1>
+  <p>Total users: <%= totalUsers %></p>
+  <p>Total orders: <%= totalOrders %></p>
+  <h2>Low stock alerts</h2>
+  <% lowStockProducts.forEach(p => { %><p><%= p.title %> - <%= p.stock %> left</p><% }) %>
+  <h2>Popular products</h2>
+  <% popularProducts.forEach(p => { %><p><%= p.title %> - <%= p.reviewCount %> reviews</p><% }) %>
+  <h2>Sales summary</h2>
+  <% salesData.forEach(d => { %><p><%= d._id %>: $<%= d.revenue.toFixed(2) %> (<%= d.count %> orders)</p><% }) %>
+  <p><a href="/admin/orders">Manage orders</a> | <a href="/admin/coupons">Manage coupons</a></p>
+</main>
+<%- include('../includes/end.ejs') %>

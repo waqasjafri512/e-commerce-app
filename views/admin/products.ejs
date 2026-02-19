@@ -25,6 +25,7 @@
                                     <p class="product__description">
                                         <%= product.description %>
                                     </p>
+                                    <p>Stock: <%= product.stock || 0 %> <% if (!product.isActive) { %>(Out of stock)<% } %></p>
                                 </div>
                                 <div class="card__actions">
                                     <a href="/admin/edit-product/<%= product._id %>?edit=true" class="btn">Edit</a>

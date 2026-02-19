@@ -1,30 +1,54 @@
 <%- include('../includes/head.ejs') %>
-    <link rel="stylesheet" href="/css/product.css">
-    </head>
+<link rel="stylesheet" href="/css/product.css">
+</head>
+<body>
+<%- include('../includes/navigation.ejs') %>
+<main class="centered">
+  <div class="product-detail-card">
+    <div class="product-detail__image"><img src="/<%= product.imageUrl %>" alt="<%= product.title %>"></div>
+    <div class="product-detail__content">
+      <h1 class="product-detail__title"><%= product.title %></h1>
+      <h2 class="product-detail__price">$<%= product.price %></h2>
+      <p>⭐ <%= product.averageRating || 0 %> (<%= product.reviewCount || 0 %>)</p>
+      <p class="product-detail__description"><%= product.description %></p>
+      <% if (isAuthenticated) { %>
+      <div class="product-detail__actions">
+        <%- include('../includes/add-to-cart.ejs', {product: product}) %>
+        <form action="/wishlist/toggle" method="POST">
+          <input type="hidden" name="productId" value="<%= product._id %>">
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+          <button class="btn" type="submit"><%= isWishlisted ? '♥ Saved' : '♡ Wishlist' %></button>
+        </form>
+      </div>
+      <% } %>
+    </div>
+  </div>
 
-    <body>
-        <%- include('../includes/navigation.ejs') %>
-        <main class="centered">
-            
-            <div class="product-detail-card">
-                <!-- Large, Heroic Image -->
-                <div class="product-detail__image">
-                    <img src="/<%= product.imageUrl %>" alt="<%= product.title %>">
-                </div>
+  <section style="width:100%; max-width:900px; margin-top:2rem;">
+    <h2>Customer Reviews</h2>
+    <% if (isAuthenticated) { %>
+    <form action="/products/review" method="POST">
+      <input type="hidden" name="productId" value="<%= product._id %>">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+      <select name="rating" required><option value="">Rating</option><option>5</option><option>4</option><option>3</option><option>2</option><option>1</option></select>
+      <input type="text" name="comment" placeholder="Write your review" required>
+      <button class="btn" type="submit">Submit</button>
+    </form>
+    <% } %>
+    <% reviews.forEach(review => { %>
+      <p><strong><%= review.userEmail %></strong> - <%= review.rating %>/5 - <%= review.comment %></p>
+    <% }) %>
+  </section>
 
-                <!-- Content Side -->
-                <div class="product-detail__content">
-                    <h1 class="product-detail__title"><%= product.title %></h1>
-                    <h2 class="product-detail__price">$<%= product.price %></h2>
-                    <p class="product-detail__description"><%= product.description %></p>
-                    
-                    <% if (isAuthenticated) { %>
-                        <div class="product-detail__actions">
-                            <%- include('../includes/add-to-cart.ejs', {product: product}) %>
-                        </div>
-                    <% } %>
-                </div>
-            </div>
-
-        </main>
-        <%- include('../includes/end.ejs') %>
+  <section style="width:100%; max-width:900px; margin-top:1rem;">
+    <h2>You may also like</h2>
+    <% recommendations.alsoLike.forEach(item => { %>
+      <a href="/products/<%= item._id %>"><%= item.title %></a><br>
+    <% }) %>
+    <h3>Frequently bought together</h3>
+    <% recommendations.boughtTogether.forEach(item => { %>
+      <a href="/products/<%= item._id %>"><%= item.title %></a><br>
+    <% }) %>
+  </section>
+</main>
+<%- include('../includes/end.ejs') %>

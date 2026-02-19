@@ -23,8 +23,10 @@
                                          style="font-size: 16px; margin-left: 15px; color: green;">
                                          Pay
                                      </a>
+                                     <span style="margin-left: 15px;">Status: <strong><%= order.status || 'Pending' %></strong></span>
                         </h1>
 
+                        <% if (order.trackingHistory && order.trackingHistory.length) { %><p>Tracking: <%= order.trackingHistory.map(t => t.status).join(' → ') %></p><% } %>
                         <!-- PRODUCT LIST -->
                         <ul class="orders__products">
                             <% order.products.forEach(p => { %>
